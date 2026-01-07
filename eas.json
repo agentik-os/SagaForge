@@ -13,8 +13,11 @@
       }
     },
     "development-simulator": {
-      "developmentClient": true,
+      "developmentClient": false,
       "distribution": "internal",
+      "env": {
+        "EXPO_NO_DEV_CLIENT": "1"
+      },
       "ios": {
         "simulator": true
       }

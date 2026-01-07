@@ -41,41 +41,90 @@ extension Color {
 }
 `;
 
-const withExpoColorFix = (config) => {
+// First plugin: Create the Swift file
+const withExpoColorFile = (config) => {
   return withDangerousMod(config, [
     "ios",
     async (config) => {
       const projectRoot = config.modRequest.projectRoot;
+      const projectName = config.modRequest.projectName || config.name;
+      const sanitizedName = projectName.replace(/[^a-zA-Z0-9]/g, "");
       const iosPath = path.join(projectRoot, "ios");
-      const appName = config.modRequest.projectName || config.name;
-      const appPath = path.join(iosPath, appName.replace(/[^a-zA-Z0-9]/g, ""));
+      const appPath = path.join(iosPath, sanitizedName);
 
-      // Try multiple possible locations
-      const possiblePaths = [
-        path.join(appPath, "ExpoColors.swift"),
-        path.join(iosPath, "ExpoColors.swift"),
-        path.join(iosPath, appName, "ExpoColors.swift"),
-      ];
+      // Create the file in the app directory
+      const targetPath = path.join(appPath, "ExpoColors.swift");
 
-      // Wait for iOS folder to be created (by other plugins/prebuild)
-      if (fs.existsSync(iosPath)) {
-        // Create in the app folder if it exists, otherwise in ios root
-        let targetPath = possiblePaths[1]; // default to ios root
-        for (const p of possiblePaths) {
-          const dir = path.dirname(p);
-          if (fs.existsSync(dir)) {
-            targetPath = p;
-            break;
-          }
-        }
-
+      if (fs.existsSync(appPath)) {
         fs.writeFileSync(targetPath, EXPO_COLORS_SWIFT);
         console.log("✅ Created ExpoColors.swift at " + targetPath);
+      } else {
+        // Fallback to ios root
+        const fallbackPath = path.join(iosPath, "ExpoColors.swift");
+        fs.writeFileSync(fallbackPath, EXPO_COLORS_SWIFT);
+        console.log("✅ Created ExpoColors.swift at " + fallbackPath);
       }
 
       return config;
     },
   ]);
+};
+
+// Second plugin: Add the Swift file to Xcode project
+const withExpoColorXcode = (config) => {
+  return withXcodeProject(config, async (config) => {
+    const xcodeProject = config.modResults;
+    const projectName = config.modRequest.projectName || config.name;
+    const sanitizedName = projectName.replace(/[^a-zA-Z0-9]/g, "");
+
+    // Find the main group (app target group)
+    const mainGroup = xcodeProject.getFirstProject().firstProject.mainGroup;
+
+    // Get all PBXGroup entries
+    const pbxGroupSection = xcodeProject.hash.project.objects["PBXGroup"];
+
+    // Find the app group by name
+    let appGroupKey = null;
+    for (const key in pbxGroupSection) {
+      const group = pbxGroupSection[key];
+      if (group && typeof group === "object" && group.name === sanitizedName) {
+        appGroupKey = key;
+        break;
+      }
+      // Also check path
+      if (group && typeof group === "object" && group.path === sanitizedName) {
+        appGroupKey = key;
+        break;
+      }
+    }
+
+    // Add the Swift file to the project
+    const filePath = sanitizedName + "/ExpoColors.swift";
+
+    try {
+      // Add file reference
+      const file = xcodeProject.addSourceFile(
+        filePath,
+        { target: xcodeProject.getFirstTarget().uuid },
+        appGroupKey
+      );
+
+      if (file) {
+        console.log("✅ Added ExpoColors.swift to Xcode project build phases");
+      }
+    } catch (e) {
+      console.log("⚠️ Could not add file to Xcode project (may already exist): " + e.message);
+    }
+
+    return config;
+  });
+};
+
+// Combined plugin
+const withExpoColorFix = (config) => {
+  config = withExpoColorFile(config);
+  config = withExpoColorXcode(config);
+  return config;
 };
 
 module.exports = withExpoColorFix;
