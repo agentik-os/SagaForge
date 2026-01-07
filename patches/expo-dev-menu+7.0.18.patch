@@ -1,0 +1,28 @@
+diff --git a/node_modules/expo-dev-menu/ios/SwiftUI/ExpoColors.swift b/node_modules/expo-dev-menu/ios/SwiftUI/ExpoColors.swift
+new file mode 100644
+index 0000000..a1b2c3d
+--- /dev/null
++++ b/node_modules/expo-dev-menu/ios/SwiftUI/ExpoColors.swift
+@@ -0,0 +1,22 @@
++// Copyright 2024-present 650 Industries. All rights reserved.
++// Color extension for Expo Dev Menu
++
++import SwiftUI
++
++extension Color {
++  static var expoSecondarySystemBackground: Color {
++    if #available(iOS 14.0, *) {
++      return Color(UIColor.secondarySystemBackground)
++    } else {
++      return Color(UIColor.systemGray6)
++    }
++  }
++
++  static var expoSystemGray6: Color {
++    if #available(iOS 14.0, *) {
++      return Color(UIColor.systemGray6)
++    } else {
++      return Color(UIColor(red: 0.95, green: 0.95, blue: 0.97, alpha: 1.0))
++    }
++  }
++}

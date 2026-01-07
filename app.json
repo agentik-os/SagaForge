@@ -29,7 +29,8 @@
             "deploymentTarget": "15.1"
           }
         }
-      ]
+      ],
+      "./plugins/expo-color-fix.js"
     ],
     "experiments": {
       "typedRoutes": true
