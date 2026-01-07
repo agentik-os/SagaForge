@@ -4,7 +4,11 @@
     "appVersionSource": "remote"
   },
   "build": {
+    "base": {
+      "node": "20.9.0"
+    },
     "development": {
+      "extends": "base",
       "developmentClient": true,
       "distribution": "internal",
       "ios": {
@@ -13,6 +17,7 @@
       }
     },
     "development-simulator": {
+      "extends": "base",
       "developmentClient": false,
       "distribution": "internal",
       "env": {
@@ -20,15 +25,18 @@
       },
       "ios": {
         "simulator": true
-      }
+      },
+      "prebuildCommand": "node scripts/remove-dev-client.js"
     },
     "preview": {
+      "extends": "base",
       "distribution": "internal",
       "ios": {
         "credentialsSource": "remote"
       }
     },
     "production": {
+      "extends": "base",
       "autoIncrement": true,
       "distribution": "store",
       "ios": {
