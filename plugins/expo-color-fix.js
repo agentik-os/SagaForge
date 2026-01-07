@@ -70,7 +70,7 @@ const withExpoColorFix = (config) => {
         }
 
         fs.writeFileSync(targetPath, EXPO_COLORS_SWIFT);
-        console.log(\`✅ Created ExpoColors.swift at \${targetPath}\`);
+        console.log("✅ Created ExpoColors.swift at " + targetPath);
       }
 
       return config;
